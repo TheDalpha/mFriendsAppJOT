@@ -1,5 +1,7 @@
 package com.example.mfriendsappjot.Model;
 
+import android.support.design.widget.CoordinatorLayout;
+
 import java.util.List;
 
 public interface IDataAccess {
@@ -10,4 +12,8 @@ public interface IDataAccess {
     List<BEFriend> selectAll();
 
     void update(BEFriend f);
+
+    void updateLocation(BEFriend f);
+
+    BEFriend getById(int id);
 }

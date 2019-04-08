@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class SQLiteImpl implements IDataAccess {
         mDatabase = openHelper.getWritableDatabase();
 
         String INSERT = "insert into " + TABLE_NAME
-                + "(name, phone, favorite, mail, url, image) values (?,?,?,?,?,?) ";
+                + "(name, phone, favorite, mail, url, image, longtitude, latitude, description, birthday) values (?,?,?,?,?,?,?,?,?,?) ";
 
         insertStmt = mDatabase.compileStatement(INSERT);
     }
@@ -38,6 +39,10 @@ public class SQLiteImpl implements IDataAccess {
         insertStmt.bindString(4, f.getMail());
         insertStmt.bindString(5, f.getURL());
         insertStmt.bindString(6, f.getImage());
+        insertStmt.bindDouble(7 ,f.getLongtitude());
+        insertStmt.bindDouble(8, f.getLatitude());
+        insertStmt.bindString(9, f.getDesc());
+        insertStmt.bindString(10, f.getBDay());
         return insertStmt.executeInsert();
     }
 
@@ -47,13 +52,13 @@ public class SQLiteImpl implements IDataAccess {
 
     public List<BEFriend> selectAll() {
         List<BEFriend> list = new ArrayList<BEFriend>();
-        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] { "id", "name", "phone", "favorite", "mail", "url", "image"},
+        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] { "id", "name", "phone", "favorite", "mail", "url", "image", "longtitude", "latitude", "description", "birthday"},
                 null, null, null, null, "name");
         if (cursor.moveToFirst()) {
             do {
                 boolean value = cursor.getInt( 3) == 1;
                 list.add(new BEFriend(cursor.getInt(0), cursor.getString(1), cursor.getString(2), value, cursor.getString(4), cursor.getString(5),
-                        cursor.getString(6)));
+                        cursor.getString(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9), cursor.getString(10)));
             } while (cursor.moveToNext());
         }
         if (!cursor.isClosed()) {
@@ -61,6 +66,28 @@ public class SQLiteImpl implements IDataAccess {
         }
         return list;
     }
+
+    public BEFriend getById(int id) {
+        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] {"id", "name", "phone", "favorite", "mail", "url", "image", "longtitude", "latitude", "description", "birthday"},
+                "id=" + id, null, null, null, "name");
+        if(cursor.moveToFirst()) {
+            boolean value = cursor.getInt(3) == 1;
+            BEFriend friend = new BEFriend(cursor.getInt(0), cursor.getString(1), cursor.getString(2), value, cursor.getString(4), cursor.getString(5),
+                    cursor.getString(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9), cursor.getString(10));
+
+            if (!cursor.isClosed()) {
+                cursor.close();
+
+                return friend;
+            }
+        }
+
+        if(!cursor.isClosed()) {
+            cursor.close();
+        }
+        return null;
+    }
+
     public void update(BEFriend f)
     {
         int favorite = f.isFavorite() ? 1 : 0;
@@ -71,7 +98,20 @@ public class SQLiteImpl implements IDataAccess {
         values.put("mail", f.getMail());
         values.put("url", f.getURL());
         values.put("image", f.getImage());
+        values.put("longtitude", f.getLongtitude());
+        values.put("latitude", f.getLatitude());
+        values.put("description", f.getDesc());
+        values.put("birthday", f.getBDay());
         mDatabase.update(TABLE_NAME, values, "id=" + f.getID(), null);
+    }
+
+    public void updateLocation(BEFriend f){
+        Log.d("Updating", "currently updating");
+        ContentValues values = new ContentValues();
+        values.put("longtitude", f.getLongtitude());
+        values.put("latitude", f.getLatitude());
+        mDatabase.update(TABLE_NAME, values, "id=" + f.getID(), null);
+        Log.d("Updated","Update complete");
     }
 
 
@@ -87,7 +127,7 @@ public class SQLiteImpl implements IDataAccess {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + TABLE_NAME
-                    + "(id INTEGER PRIMARY KEY, name TEXT, phone TEXT, favorite INT, mail TEXT, url TEXT, image TEXT)");
+                    + "(id INTEGER PRIMARY KEY, name TEXT, phone TEXT, favorite INT, mail TEXT, url TEXT, image TEXT, longtitude DOUBLE, latitude DOUBLE, description STRING, birthday STRING)");
         }
 
         @Override

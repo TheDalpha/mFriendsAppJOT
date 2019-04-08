@@ -113,7 +113,8 @@ public class MainActivity extends Activity {
             ImageView image = v.findViewById(R.id.ivImage);
 
             name.setText(friend.getName());
-            desc.setText("Hej min pik er lille");
+            desc.setText(friend.getDesc());
+
 
             if(friend.getImage() == "") {
 

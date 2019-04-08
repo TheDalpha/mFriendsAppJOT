@@ -30,13 +30,22 @@
 
             <EditText
                 android:id="@+id/etName"
-                android:text="Name" />
+                android:hint="Name"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
 
             <Button
-                android:id="@+id/btnText"
+                android:id="@+id/btnHome"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Text"
+                android:text="Home"
+                android:layout_marginLeft="20dp"/>
+
+            <Button
+                android:id="@+id/btnShow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show"
                 android:layout_marginLeft="20dp"/>
 
         </TableRow>
@@ -51,7 +60,16 @@
 
             <EditText
                 android:id="@+id/etPhone"
-                android:text="Phone" />
+                android:hint="Phone"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
+
+            <Button
+                android:id="@+id/btnText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Text"
+                android:layout_marginLeft="20dp"/>
 
             <Button
                 android:id="@+id/btnCall"
@@ -73,7 +91,9 @@
 
             <EditText
                 android:id="@+id/etMail"
-                android:text="E-mail"/>
+                android:hint="E-mail"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
 
             <Button
                 android:id="@+id/btnMail"
@@ -93,7 +113,9 @@
 
             <EditText
                 android:id="@+id/etURL"
-                android:text="URL"/>
+                android:hint="URL"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
 
             <Button
                 android:id="@+id/btnWebsite"
@@ -101,6 +123,32 @@
                 android:layout_height="wrap_content"
                 android:text="Website"
                 android:layout_marginLeft="20dp"/>
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:text="Description:"/>
+
+            <EditText
+                android:id="@+id/etDesc"
+                android:hint="Description"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
+
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:text="Birthday:"/>
+
+            <EditText
+                android:id="@+id/etBDay"
+                android:hint="Birthday"
+                android:layout_width="50dp"
+                android:layout_height="40dp"/>
+
         </TableRow>
 
         <TableRow

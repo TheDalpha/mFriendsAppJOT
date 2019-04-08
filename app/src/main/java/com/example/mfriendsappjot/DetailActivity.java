@@ -1,10 +1,12 @@
 package com.example.mfriendsappjot;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
@@ -12,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -22,6 +25,9 @@ import android.widget.Toast;
 import com.example.mfriendsappjot.Model.BEFriend;
 import com.example.mfriendsappjot.Model.DataAccessFactory;
 import com.example.mfriendsappjot.Model.IDataAccess;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.maps.GoogleMap;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -34,10 +40,13 @@ public class DetailActivity extends AppCompatActivity {
     private final static String LOGTAG = "Camtag";
     private final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
     private final static int MY_PERMISSION = 1;
+    private static final int ERROR_DIALOG_REQUEST = 9001;
+    private Intent x;
 
     File pFile;
 
     private IDataAccess fDataAccess;
+
 
     EditText etName;
     EditText etPhone;
@@ -45,11 +54,19 @@ public class DetailActivity extends AppCompatActivity {
     EditText etMail;
     EditText etURL;
     ImageView ivProfile;
+    Button btnShow;
+    Boolean isFriendSet;
+    EditText etDesc;
+    EditText etBDay;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        fDataAccess = DataAccessFactory.getInstance(this);
+        BEFriend f = (BEFriend) getIntent().getSerializableExtra("friend");
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED)  {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
@@ -63,11 +80,10 @@ public class DetailActivity extends AppCompatActivity {
                 }, MY_PERMISSION);
             }
         }
+
         setContentView(R.layout.activity_detail);
         Log.d(TAG, "Detail Activity started");
-        final Intent x = new Intent(this, MainActivity.class);
-
-        fDataAccess = DataAccessFactory.getInstance(this);
+        x = new Intent(this, MainActivity.class);
 
         etName = findViewById(R.id.etName);
         etPhone = findViewById(R.id.etPhone);
@@ -75,6 +91,9 @@ public class DetailActivity extends AppCompatActivity {
         etMail = findViewById(R.id.etMail);
         etURL = findViewById(R.id.etURL);
         ivProfile = findViewById(R.id.ivProfile);
+        etDesc = findViewById(R.id.etDesc);
+        etBDay = findViewById(R.id.etBDay);
+        btnShow = findViewById(R.id.btnShow);
         Button btnCall = findViewById(R.id.btnCall);
         btnCall.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -147,23 +166,72 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
 
+        Button btnHome = findViewById(R.id.btnHome);
+        btnHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DetailActivity.this, MapsActivity.class);
+                BEFriend f = (BEFriend) getIntent().getSerializableExtra("friend");
+                isFriendSet = false;
+                intent.putExtra("home", isFriendSet);
+                addData(intent, f);
+                startActivity(intent);
+            }
+        });
+
 
         setGUI();
-        if (pFile != null) {
-            showPicture(pFile);
+
+        if (isServicesOK()) {
+            Button btnShow = findViewById(R.id.btnShow);
+            btnShow.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(DetailActivity.this, MapsActivity.class);
+                    BEFriend f = (BEFriend) getIntent().getSerializableExtra("friend");
+                    BEFriend fr = fDataAccess.getById(f.getID());
+                    isFriendSet = true;
+                    intent.putExtra("home", isFriendSet);
+                    addData(intent, fr);
+                    startActivity(intent);
+                }
+            });
         }
 
 
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (Integer.parseInt(Build.VERSION.SDK) > 5 && keyCode == KeyEvent.KEYCODE_BACK
+                && event.getRepeatCount() == 0) {
+            onBackPressed();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(x);
+    }
+
+    private void addData(Intent x, BEFriend f)
+    {
+        x.putExtra("friend", f);
     }
 
     private void setGUI() {
         BEFriend f = (BEFriend) getIntent().getSerializableExtra("friend");
 
         if (f != null) {
+
             etName.setText(f.getName());
             etPhone.setText(f.getPhone());
             etMail.setText(f.getMail());
             etURL.setText(f.getURL());
+            etDesc.setText(f.getDesc());
+            etBDay.setText(f.getBDay());
             cbFavorite.setChecked(f.isFavorite());
             if(f.getImage() != "") {
                 showPicture(pFile);
@@ -186,7 +254,7 @@ public class DetailActivity extends AppCompatActivity {
         intent.setType("plain/text");
         intent.putExtra(Intent.EXTRA_EMAIL, f.getMail());
         intent.putExtra(Intent.EXTRA_SUBJECT, "Test");
-        intent.putExtra(Intent.EXTRA_TEXT, "Testing this shit");
+        intent.putExtra(Intent.EXTRA_TEXT, "Opening app");
         startActivity(intent);
     }
 
@@ -195,7 +263,7 @@ public class DetailActivity extends AppCompatActivity {
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("sms:" + f.getPhone()));
-        intent.putExtra("sms_body", "Testing this shit");
+        intent.putExtra("sms_body", "Opening app");
         startActivity(intent);
     }
 
@@ -214,6 +282,11 @@ public class DetailActivity extends AppCompatActivity {
         boolean favorite = cbFavorite.isChecked();
         String mail = etMail.getText().toString();
         String url = etURL.getText().toString();
+        String desc = etDesc.getText().toString();
+        String bDay = etBDay.getText().toString();
+        double longtitude = 0;
+        double latitude = 0;
+
         if (fr != null) {
             String imageUri;
             if(pFile != null){
@@ -221,15 +294,19 @@ public class DetailActivity extends AppCompatActivity {
             } else {
                  imageUri = fr.getImage();
             }
-            BEFriend f = new BEFriend(fr.getID(), name, phone, favorite, mail, url, imageUri);
+            BEFriend f = new BEFriend(fr.getID(), name, phone, favorite, mail, url, imageUri, longtitude, latitude, desc, bDay);
             fDataAccess.update(f);
         } else {
             if (name.length() == 0) {
                 Toast.makeText(this, "You must enter name", Toast.LENGTH_LONG).show();
                 return;
             }
+            String imageUri = "";
+            if(pFile != null) {
+                imageUri = pFile.getAbsolutePath();
+            }
             int id = -1;
-            BEFriend f = new BEFriend(id, name, phone, favorite, mail, url, "");
+            BEFriend f = new BEFriend(id, name, phone, favorite, mail, url, imageUri, longtitude, latitude, desc, bDay);
             fDataAccess.insert(f);
             etName.setText("");
             etPhone.setText("");
@@ -306,14 +383,33 @@ public class DetailActivity extends AppCompatActivity {
 
     private void showPicture(File f) {
         BEFriend fr = (BEFriend) getIntent().getSerializableExtra("friend");
-        if(fr.getImage() == "") {
+        if(fr == null || fr.getImage() == "") {
             ivProfile.setImageURI(Uri.fromFile(f));
+        } else if (pFile != null) {
+            ivProfile.setImageURI(Uri.fromFile(pFile));
         } else {
             ivProfile.setImageURI(Uri.parse(fr.getImage()));
         }
         ivProfile.setBackgroundColor(Color.RED);
     }
 
-    void log(String s)
-    { Log.d(LOGTAG, s); }
+    public boolean isServicesOK() {
+        Log.d(TAG, "Checking google maps version");
+
+        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(DetailActivity.this);
+
+        if (available == ConnectionResult.SUCCESS) {
+            // No problems everything runs fine
+            Log.d(TAG, "Working");
+            return true;
+        } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
+            // and Error occured but we can fix it
+            Log.d(TAG, "Error");
+            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(DetailActivity.this, available, ERROR_DIALOG_REQUEST);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "You can't make map request", Toast.LENGTH_SHORT).show();
+        }
+        return false;
+    }
 }

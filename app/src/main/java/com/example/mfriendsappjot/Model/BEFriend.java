@@ -9,9 +9,19 @@ public class BEFriend implements Serializable {
     private String m_mail;
     private String m_URL;
     private String m_image;
+    private String m_desc;
+    private String m_bday;
+    private double m_longtitude;
+    private double m_latitude;
     private int m_id;
 
-    public BEFriend(int id, String name, String phone, Boolean isFavorite, String mail, String url, String image) {
+    public BEFriend (int id, double longtitude, double latitude) {
+        m_longtitude = longtitude;
+        m_latitude = latitude;
+        m_id = id;
+    }
+    public BEFriend(int id, String name, String phone, Boolean isFavorite, String mail, String url, String image,double longtitude,
+                    double latitude, String desc, String bDay) {
         m_id = id;
         m_name = name;
         m_phone = phone;
@@ -19,7 +29,19 @@ public class BEFriend implements Serializable {
         m_mail = mail;
         m_URL = url;
         m_image = image;
+        m_longtitude = longtitude;
+        m_latitude = latitude;
+        m_desc = desc;
+        m_bday = bDay;
     }
+
+    public String getDesc() { return m_desc;}
+
+    public String getBDay() { return m_bday;}
+
+    public double getLongtitude() { return m_longtitude;}
+
+    public double getLatitude() { return m_latitude;}
 
     public String getImage() { return m_image;}
 
