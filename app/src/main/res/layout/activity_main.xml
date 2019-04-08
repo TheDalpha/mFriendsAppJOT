@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".DetailActivity">
+        tools:context=".MainActivity">
 
     <Button
         android:id="@+id/btnAdd"
@@ -17,7 +17,7 @@
         android:layout_marginRight="10dp"/>
 
     <ListView
-        android:id="@android:id/list"
+        android:id="@+id/lvfriendslist"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"></ListView>
 

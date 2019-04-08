@@ -25,7 +25,7 @@ public class SQLiteImpl implements IDataAccess {
         mDatabase = openHelper.getWritableDatabase();
 
         String INSERT = "insert into " + TABLE_NAME
-                + "(name, phone, favorite, mail, url) values (?,?,?,?,?) ";
+                + "(name, phone, favorite, mail, url, image) values (?,?,?,?,?,?) ";
 
         insertStmt = mDatabase.compileStatement(INSERT);
     }
@@ -37,6 +37,7 @@ public class SQLiteImpl implements IDataAccess {
         insertStmt.bindLong(3, favorite);
         insertStmt.bindString(4, f.getMail());
         insertStmt.bindString(5, f.getURL());
+        insertStmt.bindString(6, f.getImage());
         return insertStmt.executeInsert();
     }
 
@@ -46,12 +47,13 @@ public class SQLiteImpl implements IDataAccess {
 
     public List<BEFriend> selectAll() {
         List<BEFriend> list = new ArrayList<BEFriend>();
-        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] { "id", "name", "phone", "favorite", "mail", "url"},
+        Cursor cursor = mDatabase.query(TABLE_NAME, new String[] { "id", "name", "phone", "favorite", "mail", "url", "image"},
                 null, null, null, null, "name");
         if (cursor.moveToFirst()) {
             do {
                 boolean value = cursor.getInt( 3) == 1;
-                list.add(new BEFriend(cursor.getInt(0), cursor.getString(1), cursor.getString(2), value, cursor.getString(4), cursor.getString(5)));
+                list.add(new BEFriend(cursor.getInt(0), cursor.getString(1), cursor.getString(2), value, cursor.getString(4), cursor.getString(5),
+                        cursor.getString(6)));
             } while (cursor.moveToNext());
         }
         if (!cursor.isClosed()) {
@@ -68,6 +70,7 @@ public class SQLiteImpl implements IDataAccess {
         values.put("favorite", favorite);
         values.put("mail", f.getMail());
         values.put("url", f.getURL());
+        values.put("image", f.getImage());
         mDatabase.update(TABLE_NAME, values, "id=" + f.getID(), null);
     }
 
@@ -84,7 +87,7 @@ public class SQLiteImpl implements IDataAccess {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + TABLE_NAME
-                    + "(id INTEGER PRIMARY KEY, name TEXT, phone TEXT, favorite INT, mail TEXT, url TEXT)");
+                    + "(id INTEGER PRIMARY KEY, name TEXT, phone TEXT, favorite INT, mail TEXT, url TEXT, image TEXT)");
         }
 
         @Override

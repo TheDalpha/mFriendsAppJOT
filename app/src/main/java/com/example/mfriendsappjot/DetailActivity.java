@@ -1,12 +1,15 @@
 package com.example.mfriendsappjot;
 
-import android.app.Activity;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -30,6 +33,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private final static String LOGTAG = "Camtag";
     private final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+    private final static int MY_PERMISSION = 1;
 
     File pFile;
 
@@ -46,6 +50,19 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED)  {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+            } else {
+                ActivityCompat.requestPermissions(this, new String[] {
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                }, MY_PERMISSION);
+                ActivityCompat.requestPermissions(this, new String[] {
+                        Manifest.permission.CAMERA
+                }, MY_PERMISSION);
+            }
+        }
         setContentView(R.layout.activity_detail);
         Log.d(TAG, "Detail Activity started");
         final Intent x = new Intent(this, MainActivity.class);
@@ -123,9 +140,18 @@ public class DetailActivity extends AppCompatActivity {
                 takePicture();
             }
         });
+        ivProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePicture();
+            }
+        });
 
 
         setGUI();
+        if (pFile != null) {
+            showPicture(pFile);
+        }
 
 
     }
@@ -139,6 +165,9 @@ public class DetailActivity extends AppCompatActivity {
             etMail.setText(f.getMail());
             etURL.setText(f.getURL());
             cbFavorite.setChecked(f.isFavorite());
+            if(f.getImage() != "") {
+                showPicture(pFile);
+            }
         }
     }
 
@@ -186,7 +215,13 @@ public class DetailActivity extends AppCompatActivity {
         String mail = etMail.getText().toString();
         String url = etURL.getText().toString();
         if (fr != null) {
-            BEFriend f = new BEFriend(fr.getID(), name, phone, favorite, mail, url);
+            String imageUri;
+            if(pFile != null){
+                imageUri = pFile.getAbsolutePath();
+            } else {
+                 imageUri = fr.getImage();
+            }
+            BEFriend f = new BEFriend(fr.getID(), name, phone, favorite, mail, url, imageUri);
             fDataAccess.update(f);
         } else {
             if (name.length() == 0) {
@@ -194,7 +229,7 @@ public class DetailActivity extends AppCompatActivity {
                 return;
             }
             int id = -1;
-            BEFriend f = new BEFriend(id, name, phone, favorite, mail, url);
+            BEFriend f = new BEFriend(id, name, phone, favorite, mail, url, "");
             fDataAccess.insert(f);
             etName.setText("");
             etPhone.setText("");
@@ -221,6 +256,9 @@ public class DetailActivity extends AppCompatActivity {
             return;
         }
 
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(pFile));
 
@@ -232,21 +270,24 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private File getOutputMediaFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Camera01");
 
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                log("Failed to create directory");
-                return null;
+            File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), getResources().getString(R.string.app_name));
+
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    Log.d("mFriendsAppJOT", "failed to create directory");
+                    return null;
+                }
             }
-        }
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String postfix = "jpg";
-        String prefix = "IMG";
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String postfix = "jpg";
+            String prefix = "IMG";
 
-        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + prefix + "_" + timeStamp + "." + postfix);
-        return mediaFile;
+            File mediaFile = new File(mediaStorageDir.getPath() + File.separator + prefix + "_" + timeStamp + "." + postfix);
+            return mediaFile;
+
     }
 
     @Override
@@ -264,7 +305,12 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void showPicture(File f) {
-        ivProfile.setImageURI(Uri.fromFile(f));
+        BEFriend fr = (BEFriend) getIntent().getSerializableExtra("friend");
+        if(fr.getImage() == "") {
+            ivProfile.setImageURI(Uri.fromFile(f));
+        } else {
+            ivProfile.setImageURI(Uri.parse(fr.getImage()));
+        }
         ivProfile.setBackgroundColor(Color.RED);
     }
 

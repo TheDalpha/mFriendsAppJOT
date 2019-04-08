@@ -1,30 +1,41 @@
 package com.example.mfriendsappjot;
 
+import android.app.Activity;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.example.mfriendsappjot.Model.BEFriend;
 import com.example.mfriendsappjot.Model.DataAccessFactory;
 import com.example.mfriendsappjot.Model.Friends;
 import com.example.mfriendsappjot.Model.IDataAccess;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends Activity {
 
     public static String TAG = "Friend2";
     private IDataAccess fDataAccess;
+    private ListView lvFriends;
+    private fAdapter fadapt;
 
-    Friends m_friends;
-    ArrayList<String> friendsList = new ArrayList<>();
+    List<BEFriend> friendsList;
+
 
 
     @Override
@@ -33,26 +44,24 @@ public class MainActivity extends ListActivity {
         setContentView(R.layout.activity_main);
         this.setTitle("Friends v2");
 
+
+        lvFriends = findViewById(R.id.lvfriendslist);
         fDataAccess = DataAccessFactory.getInstance(this);
 
         final Intent x = new Intent(this, DetailActivity.class);
-        m_friends = new Friends();
 
+        showFriends();
 
+        lvFriends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                BEFriend friend = friendsList.get(position);
+                addData(x, friend);
+                startActivity(x);
+            }
+        });
         Button btnShow = findViewById(R.id.btnAdd);
         btnShow.setText("Add Contact");
-
-
-
-       // friends = m_friends.getNames();
-        if (fDataAccess.selectAll().size() != 0) {
-            showFriends(fDataAccess.selectAll());
-            ListAdapter adapter =
-                    new ArrayAdapter<String>(this,
-                            android.R.layout.simple_list_item_1,
-                            friendsList);
-            setListAdapter(adapter);
-        }
 
 
         btnShow.setOnClickListener(new View.OnClickListener() {
@@ -64,30 +73,55 @@ public class MainActivity extends ListActivity {
 
     }
 
-
-    @Override
-    public void onListItemClick(ListView parent, View v, int position,
-                                long id) {
-
-        Intent x = new Intent(this, DetailActivity.class);
-        Log.d(TAG, "Detail activity will be started");
-        BEFriend friend = fDataAccess.selectAll().get(position);
-        addData(x, friend);
-        startActivity(x);
-        Log.d(TAG, "Detail activity is started");
-
-    }
-
     private void addData(Intent x, BEFriend f)
     {
         x.putExtra("friend", f);
     }
 
 
-    private void showFriends(List<BEFriend> friends) {
-        for (BEFriend f : friends) {
-            Log.d("List of friends", f.getName());
-            friendsList.add(f.getName());
+    private void showFriends() {
+        friendsList = fDataAccess.selectAll();
+
+        fadapt = new fAdapter(this, R.layout.single_row, friendsList);
+        lvFriends.setAdapter(fadapt);
+    }
+
+    private class fAdapter extends ArrayAdapter<BEFriend> {
+
+        List<BEFriend> listFriends = new ArrayList<>();
+
+        public fAdapter(Context ctx, int single_row, List<BEFriend> friends){
+            super(ctx, single_row, friends);
+            this.listFriends.addAll(friends);
+        }
+
+        @Override
+        public View getView(int position, View v, ViewGroup parent) {
+
+            BEFriend friend = listFriends.get(position);
+
+            if ( v == null) {
+                LayoutInflater li = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = li.inflate(R.layout.single_row, null);
+                Log.d("list", "Position: " + position + " View created");
+            } else {
+                Log.d("list", "Position: " + position + "View reused");
+            }
+
+            TextView name = v.findViewById(R.id.tvName);
+            TextView desc = v.findViewById(R.id.tvDesc);
+            ImageView image = v.findViewById(R.id.ivImage);
+
+            name.setText(friend.getName());
+            desc.setText("Hej min pik er lille");
+
+            if(friend.getImage() == "") {
+
+            } else {
+                image.setImageURI(Uri.fromFile(new File(friend.getImage())));
+            }
+
+            return v;
         }
     }
 
