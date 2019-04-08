@@ -1,7 +1,6 @@
 package com.example.mfriendsappjot;
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,13 +13,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.mfriendsappjot.Model.BEFriend;
 import com.example.mfriendsappjot.Model.DataAccessFactory;
-import com.example.mfriendsappjot.Model.Friends;
 import com.example.mfriendsappjot.Model.IDataAccess;
 
 import java.io.File;
@@ -29,11 +26,15 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
+    // Class tag for logging
     public static String TAG = "Friend2";
+    // Variable for IDataAccess class
     private IDataAccess fDataAccess;
+    // Variable for the ListView
     private ListView lvFriends;
+    // Variable for the fAdpapter class
     private fAdapter fadapt;
-
+    // Variable for a list of the BEFriend class
     List<BEFriend> friendsList;
 
 
@@ -42,16 +43,18 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        this.setTitle("Friends v2");
+        this.setTitle("mFriendsJOT");
 
-
+        // Initialize the ListView
         lvFriends = findViewById(R.id.lvfriendslist);
+        // Initialize the DataAccessFactory class
         fDataAccess = DataAccessFactory.getInstance(this);
-
+        // Variable for the Intent
         final Intent x = new Intent(this, DetailActivity.class);
 
         showFriends();
 
+        // Listens to clicks on the ListView and gets position of the click
         lvFriends.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -60,10 +63,12 @@ public class MainActivity extends Activity {
                 startActivity(x);
             }
         });
+        // Initialize the button add
         Button btnShow = findViewById(R.id.btnAdd);
         btnShow.setText("Add Contact");
 
 
+        //Starts activity based on the intent
         btnShow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,12 +78,20 @@ public class MainActivity extends Activity {
 
     }
 
+    /**
+     * Adds data to the intent.
+     * @param x
+     * @param f
+     */
     private void addData(Intent x, BEFriend f)
     {
         x.putExtra("friend", f);
     }
 
 
+    /**
+     * Gets all friends from database and sets up the adapter
+     */
     private void showFriends() {
         friendsList = fDataAccess.selectAll();
 
@@ -86,8 +99,10 @@ public class MainActivity extends Activity {
         lvFriends.setAdapter(fadapt);
     }
 
+    // The adapter class for the ListView
     private class fAdapter extends ArrayAdapter<BEFriend> {
 
+        //Initialize a list of BEFriend
         List<BEFriend> listFriends = new ArrayList<>();
 
         public fAdapter(Context ctx, int single_row, List<BEFriend> friends){
@@ -95,6 +110,13 @@ public class MainActivity extends Activity {
             this.listFriends.addAll(friends);
         }
 
+        /**
+         * Overrides the getView method and adds the image, name and description of a friend.
+         * @param position
+         * @param v
+         * @param parent
+         * @return
+         */
         @Override
         public View getView(int position, View v, ViewGroup parent) {
 

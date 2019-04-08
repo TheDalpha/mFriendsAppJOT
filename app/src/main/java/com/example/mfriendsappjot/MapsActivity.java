@@ -1,27 +1,22 @@
 package com.example.mfriendsappjot;
 
 import android.Manifest;
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.EventLogTags;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.mfriendsappjot.Model.BEFriend;
 import com.example.mfriendsappjot.Model.DataAccessFactory;
 import com.example.mfriendsappjot.Model.IDataAccess;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,50 +30,79 @@ import com.google.android.gms.tasks.Task;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    // Variable for the Google Map
     private GoogleMap mMap;
+    // Class tag for Logging
     private static final String TAG = "MapsActivity";
+    // Initialize Location permission request code
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    // Variable for the FusedLocationProviderClient
     private FusedLocationProviderClient mFusedLocationProviderClient;
+    // Setting default zoom on google maps
     private static final float DEFAULT_ZOOM = 15f;
+    // Variable for the IDataAccess interface
     private IDataAccess fDataAccess;
 
+    // Variable for Location
     Location currentLocation;
+    //boolean to determent if home or show button was clicked
     Boolean isFriendSet;
+    // Variable for the Friend object
     BEFriend f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        //initialize the DataAccessFactory class
         fDataAccess = DataAccessFactory.getInstance(this);
+
+        //Checks to see if there is permission, if not asks for it.
         permissionCheck();
+
+        //Initialize BEFriend business class from the intent
         f = (BEFriend) getIntent().getSerializableExtra("friend");
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        //Initialize Boolean variable from the intent
         isFriendSet = (Boolean) getIntent().getSerializableExtra("home");
     }
 
+    /**
+     * Overrides the back button on the phone to be configurable
+     * @param keyCode
+     * @param event
+     * @return
+     */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (Integer.parseInt(Build.VERSION.SDK) > 5 && keyCode == KeyEvent.KEYCODE_BACK
-        && event.getRepeatCount() == 0) {
+                && event.getRepeatCount() == 0) {
             onBackPressed();
             return true;
         }
         return super.onKeyDown(keyCode, event);
     }
 
+    /**
+     * Overrides the back button on the phone to be configurable
+     */
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(MapsActivity.this, DetailActivity.class);
         intent.putExtra("friend", f);
-        //intent.addCategory(Intent.CATEGORY_HOME);
-        //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
         startActivity(intent);
     }
 
+    /**
+     * Gets the device location and sets markers and map camera to the users longtitude and latitude
+     */
     private void getDeviceLocation() {
         Log.d(TAG, "getDeviceLocation: getting location");
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -91,8 +115,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.d(TAG, "onComplete: found location");
 
                         currentLocation = (Location) task.getResult();
-                        //moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM);
-                        if(isFriendSet) {
+
+                        // If isFriendSet is true, the method seeMarkers will set marker for the friend
+                        // selected and for your current location.
+                        // If it is false, you can select location for the current friend.
+                        if (isFriendSet) {
                             seeMarkers();
                         } else {
                             double latitude = currentLocation.getLatitude();
@@ -126,6 +153,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    /**
+     * Moves the camera to the selected longtitude and latitude with a selected zoom on map.
+     * @param latLng
+     * @param zoom
+     */
     private void moveCamera(LatLng latLng, float zoom) {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
     }
@@ -147,8 +179,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getDeviceLocation();
     }
 
+    /**
+     * Puts markers on the map for the current selected friend and your current location.
+     */
     public void seeMarkers() {
-        if(f.getLongtitude() > 0 && f.getLatitude() > 0) {
+        if (f.getLongtitude() > 0 && f.getLatitude() > 0) {
             LatLng friendLoc = new LatLng(f.getLatitude(), f.getLongtitude());
             mMap.addMarker(new MarkerOptions().position(friendLoc).title(f.getName() + " is here ! :)"));
             moveCamera(friendLoc, DEFAULT_ZOOM);
@@ -161,6 +196,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    /**
+     * Checks for permission, if permission has not been granted, it will request it
+     */
     public void permissionCheck() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -172,6 +210,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    /**
+     * Checks to see if permission has been granted or not.
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {

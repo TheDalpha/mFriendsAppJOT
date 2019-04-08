@@ -31,6 +31,11 @@ public class SQLiteImpl implements IDataAccess {
         insertStmt = mDatabase.compileStatement(INSERT);
     }
 
+    /**
+     * Creates and insert statement and execute it.
+     * @param f
+     * @return
+     */
     public long insert(BEFriend f) {
         int favorite = f.isFavorite() ? 1 : 0;
         insertStmt.bindString(1, f.getName());
@@ -46,10 +51,18 @@ public class SQLiteImpl implements IDataAccess {
         return insertStmt.executeInsert();
     }
 
+    /**
+     * Deletes the selected friend from database
+     * @param id
+     */
     public void deleteFriend(int id) {
         mDatabase.delete(TABLE_NAME, "id=" + id, null);
     }
 
+    /**
+     * Selects all friends from the database
+     * @return a list of friends
+     */
     public List<BEFriend> selectAll() {
         List<BEFriend> list = new ArrayList<BEFriend>();
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[] { "id", "name", "phone", "favorite", "mail", "url", "image", "longtitude", "latitude", "description", "birthday"},
@@ -67,6 +80,11 @@ public class SQLiteImpl implements IDataAccess {
         return list;
     }
 
+    /**
+     * Gets the friend with the id from the database
+     * @param id
+     * @return a friend
+     */
     public BEFriend getById(int id) {
         Cursor cursor = mDatabase.query(TABLE_NAME, new String[] {"id", "name", "phone", "favorite", "mail", "url", "image", "longtitude", "latitude", "description", "birthday"},
                 "id=" + id, null, null, null, "name");
@@ -88,6 +106,10 @@ public class SQLiteImpl implements IDataAccess {
         return null;
     }
 
+    /**
+     * Updates the selected friend in the database
+     * @param f
+     */
     public void update(BEFriend f)
     {
         int favorite = f.isFavorite() ? 1 : 0;
@@ -105,6 +127,10 @@ public class SQLiteImpl implements IDataAccess {
         mDatabase.update(TABLE_NAME, values, "id=" + f.getID(), null);
     }
 
+    /**
+     * Updates the location of the selected friend
+     * @param f
+     */
     public void updateLocation(BEFriend f){
         Log.d("Updating", "currently updating");
         ContentValues values = new ContentValues();

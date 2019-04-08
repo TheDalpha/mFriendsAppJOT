@@ -3,6 +3,8 @@ package com.example.mfriendsappjot.Model;
 import java.io.Serializable;
 
 public class BEFriend implements Serializable {
+
+    // Variables of BEFriend attributes
     private String m_name;
     private String m_phone;
     private Boolean m_isFavorite;
@@ -48,8 +50,6 @@ public class BEFriend implements Serializable {
     public String getPhone() {
         return m_phone;
     }
-
-    public void setPhone(String phone) {phone = m_phone;}
 
     public String getName() {return m_name;}
 
