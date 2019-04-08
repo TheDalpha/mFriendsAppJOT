@@ -1,24 +1,37 @@
 package com.example.mfriendsappjot;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.mfriendsappjot.Model.BEFriend;
 import com.example.mfriendsappjot.Model.DataAccessFactory;
 import com.example.mfriendsappjot.Model.IDataAccess;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 public class DetailActivity extends AppCompatActivity {
     String TAG = MainActivity.TAG;
+
+    private final static String LOGTAG = "Camtag";
+    private final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+
+    File pFile;
 
     private IDataAccess fDataAccess;
 
@@ -27,6 +40,7 @@ public class DetailActivity extends AppCompatActivity {
     CheckBox cbFavorite;
     EditText etMail;
     EditText etURL;
+    ImageView ivProfile;
 
 
     @Override
@@ -43,6 +57,7 @@ public class DetailActivity extends AppCompatActivity {
         cbFavorite = findViewById(R.id.cbFavorite);
         etMail = findViewById(R.id.etMail);
         etURL = findViewById(R.id.etURL);
+        ivProfile = findViewById(R.id.ivProfile);
         Button btnCall = findViewById(R.id.btnCall);
         btnCall.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,6 +113,14 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(x);
+            }
+        });
+
+        Button btnTakeP = findViewById(R.id.btnTakeP);
+        btnTakeP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePicture();
             }
         });
 
@@ -162,7 +185,7 @@ public class DetailActivity extends AppCompatActivity {
         boolean favorite = cbFavorite.isChecked();
         String mail = etMail.getText().toString();
         String url = etURL.getText().toString();
-        if (fr.getID() > 0) {
+        if (fr != null) {
             BEFriend f = new BEFriend(fr.getID(), name, phone, favorite, mail, url);
             fDataAccess.update(f);
         } else {
@@ -190,4 +213,61 @@ public class DetailActivity extends AppCompatActivity {
         Intent x = new Intent(this, MainActivity.class);
         startActivity(x);
     }
+
+    private void takePicture() {
+        pFile = getOutputMediaFile();
+        if (pFile == null) {
+            Toast.makeText(this, "Could not create file", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(pFile));
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        } else {
+            Log.d(LOGTAG, "camera app could NOT be started");
+        }
+    }
+
+    private File getOutputMediaFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Camera01");
+
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                log("Failed to create directory");
+                return null;
+            }
+        }
+
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String postfix = "jpg";
+        String prefix = "IMG";
+
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + prefix + "_" + timeStamp + "." + postfix);
+        return mediaFile;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                showPicture(pFile);
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "Canceled", Toast.LENGTH_LONG).show();
+                return;
+            } else {
+                Toast.makeText(this, "Picture NOT taken: unknown error", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void showPicture(File f) {
+        ivProfile.setImageURI(Uri.fromFile(f));
+        ivProfile.setBackgroundColor(Color.RED);
+    }
+
+    void log(String s)
+    { Log.d(LOGTAG, s); }
 }
